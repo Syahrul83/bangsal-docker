@@ -56,38 +56,53 @@ networks:
      - laravel-net
 ```
 
-## 🚀 Menguhubunkan dengan NPM di Portainer
-Cek network laravel-net dan siapa saja yang join:
+## 🚀 Menghubungkan NPM (Nginx Proxy Manager) ke Laravel di Docker
 
+### 1️⃣ Cek Network `laravel-net` dan Container yang Terhubung
+
+```sh
 docker network ls
-docker network inspect laravel-net | jq '.[0].Containers'  # kalau ada jq
-Kalau NPM belum join ke laravel-net, sambungkan sekarang:
+docker network inspect laravel-net | jq '.[0].Containers'  # (opsional, jika ada jq)
+```
 
+### 2️⃣ Hubungkan NPM ke Network `laravel-net`
 
-# ganti <npm_container> dengan nama container NPM kamu (mis. "nginx-proxy-manager" atau "npm-app-1")
+Jika container NPM belum terhubung ke `laravel-net`, sambungkan dengan perintah berikut:
+
+```sh
+# Ganti <npm_container> dengan nama container NPM kamu (misal: "nginx-proxy-manager" atau "npm-app-1")
 docker network connect laravel-net <npm_container>
-Di Portainer: buka container NPM → Networks → Join network → pilih laravel-net.
+```
 
-⚠️ Di compose kamu ada typo: external: trueI → harus external: true. Pastikan network-nya memang ada:
+**Via Portainer:**  
+Buka container NPM → *Networks* → *Join network* → pilih `laravel-net`.
 
+> ⚠️ **Catatan:**  
+> Di file `docker-compose.yml` pastikan tidak ada typo pada bagian network:  
+> `external: trueI` → harusnya `external: true`  
+> Pastikan network sudah ada, jika belum buat dengan:
+>
+> ```sh
+> docker network create laravel-net
+> ```
 
-docker network create laravel-net  # kalau belum ada
-2) Tes koneksi dari dalam container NPM ke backend
+### 3️⃣ Tes Koneksi dari Container NPM ke Backend
 
+```sh
 docker exec -it <npm_container> sh -lc "apk add --no-cache curl >/dev/null 2>&1 || true; curl -I http://bangsal-nginx"
-Harusnya keluar HTTP/1.1 200 OK.
-Kalau timeout/connection refused, berarti NPM belum satu network atau hostname salah.
+```
 
-3) Setting di NPM yang benar
-Forward Hostname/IP: bangsal-nginx (bukan localhost, bukan IP VPS)
+Jika berhasil, akan muncul: `HTTP/1.1 200 OK`.  
+Jika timeout/connection refused, berarti NPM belum satu network atau hostname salah.
 
-Forward Port: 80
+### 4️⃣ Setting di NPM (Nginx Proxy Manager)
 
-Scheme: http
+- **Forward Hostname/IP:** `bangsal-nginx` *(bukan localhost atau IP VPS)*
+- **Forward Port:** `80`
+- **Scheme:** `http`
+- Centang **Websockets** & **Block Common Exploits**
+- Tab **SSL** → *Request a new SSL certificate (Let’s Encrypt)* → *Force SSL*
 
-Centang Websockets & Block Common Exploits
-
-Tab SSL → Request a new SSL certificate (Let’s Encrypt) → Force SSL
 
 
 ---
