@@ -56,6 +56,40 @@ networks:
      - laravel-net
 ```
 
+## 🚀 Menguhubunkan dengan NPM di Portainer
+Cek network laravel-net dan siapa saja yang join:
+
+docker network ls
+docker network inspect laravel-net | jq '.[0].Containers'  # kalau ada jq
+Kalau NPM belum join ke laravel-net, sambungkan sekarang:
+
+
+# ganti <npm_container> dengan nama container NPM kamu (mis. "nginx-proxy-manager" atau "npm-app-1")
+docker network connect laravel-net <npm_container>
+Di Portainer: buka container NPM → Networks → Join network → pilih laravel-net.
+
+⚠️ Di compose kamu ada typo: external: trueI → harus external: true. Pastikan network-nya memang ada:
+
+
+docker network create laravel-net  # kalau belum ada
+2) Tes koneksi dari dalam container NPM ke backend
+
+docker exec -it <npm_container> sh -lc "apk add --no-cache curl >/dev/null 2>&1 || true; curl -I http://bangsal-nginx"
+Harusnya keluar HTTP/1.1 200 OK.
+Kalau timeout/connection refused, berarti NPM belum satu network atau hostname salah.
+
+3) Setting di NPM yang benar
+Forward Hostname/IP: bangsal-nginx (bukan localhost, bukan IP VPS)
+
+Forward Port: 80
+
+Scheme: http
+
+Centang Websockets & Block Common Exploits
+
+Tab SSL → Request a new SSL certificate (Let’s Encrypt) → Force SSL
+
+
 ---
 
 ## 🚀 Start Containers
